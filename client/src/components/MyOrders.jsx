@@ -105,27 +105,34 @@ const MyOrders = ({
                 Joined Items ({order.items.length}):
               </strong>
               <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                {order.items.map((item, idx) => (
-                  <li key={idx}>
-                    <span className="font-medium">
-                      {item.user?.name || "Someone"}:
-                    </span>
-                    {item.link ? (
-                      <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >{` ${item.name}`}</a>
-                    ) : (
-                      ` ${item.name}`
-                    )}
-                    {` × ${item.quantity}`}
-                  </li>
-                ))}
+                
+                 {order.items.map((item, idx) => {
+                  
+                  const isMyItem = item.user?.email === currentUser?.email;
+                  
+                  return (
+                    <li key={idx}>
+                      <span className="font-medium">
+                        {isMyItem ? "Added by Me" : (item.user?.name || "Someone")}:
+                      </span>
+                      {item.link ? (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >{` ${item.name}`}</a>
+                      ) : (
+                        ` ${item.name}`
+                      )}
+                      {` × ${item.quantity}`}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
+                  
 
           {/* --- PARTICIPANT TIMELINE --- */}
           {isInitiator && locked && order.items.length > 0 && (
@@ -183,12 +190,12 @@ const MyOrders = ({
                 <FaTrash /> Delete
               </button>
             )}
-            {!isInitiator && !locked && (
+            {isInitiator && !locked && (
               <button
                 onClick={() => onAddItemsClick(order)}
                 className="bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
-                <FaPlusCircle /> Add More Items
+                <FaPlusCircle /> Add Items
               </button>
             )}
 
