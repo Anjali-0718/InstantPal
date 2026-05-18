@@ -99,41 +99,36 @@ const MyOrders = ({
           </div>
 
           {/* --- JOINED ITEMS --- */}
+        
           {order.items?.length > 0 && (!locked || (locked && !isInitiator)) && (
             <div className="mt-3 pt-3 border-t">
               <strong className="text-gray-700">
-                Joined Items ({order.items.length}):
+                Submitted Carts ({order.items.length}):
               </strong>
-              <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                
-                 {order.items.map((item, idx) => {
-                  
+              <ul className="list-disc list-inside ml-4 mt-2 space-y-2">
+                {order.items.map((item, idx) => {
                   const isMyItem = item.user?.email === currentUser?.email;
                   
                   return (
-                    <li key={idx}>
+                    <li key={idx} className="flex items-center gap-2">
                       <span className="font-medium">
-                        {isMyItem ? "Added by Me" : (item.user?.name || "Someone")}:
+                        {isMyItem ? "Me" : (item.user?.name || "Someone")}:
                       </span>
-                      {item.link ? (
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >{` ${item.name}`}</a>
-                      ) : (
-                        ` ${item.name}`
-                      )}
-                      {` × ${item.quantity}`}
+                      <a
+                        href={item.cartLink} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 transition"
+                      >
+                         View Cart
+                      </a>
                     </li>
                   );
                 })}
               </ul>
             </div>
           )}
-                  
-
+                 
           {/* --- PARTICIPANT TIMELINE --- */}
           {isInitiator && locked && order.items.length > 0 && (
             <div className="mt-4 pt-4 border-t">
@@ -141,33 +136,31 @@ const MyOrders = ({
                 Order Participants
               </h4>
               <div className="relative border-l-2 border-blue-200 pl-6 space-y-6">
-                {order.items.map((item, index) => (
-                  <div key={index} className="relative">
-                    <div className="absolute -left-[33px] top-1 h-4 w-4 bg-white border-2 border-blue-500 rounded-full"></div>
-                    <div className="font-bold flex items-center gap-2 text-gray-700">
-                      <FaUserCircle />
-                      {item.user?.name || "A User" }
-                      <div className="font-medium">({item.user?.roomNumber})</div>
-                    </div>
+                {order.items.map((item, index) => {
+                   const isMyItem = item.user?.email === currentUser?.email;
 
-                    <div className="pl-6 text-sm text-gray-600 mt-1">
-                      <p>
-                        <span className="font-medium">Item:</span> {item.name} (
-                        ×{item.quantity})
-                      </p>
-                      {item.link && (
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          View Product Link
-                        </a>
-                      )}
+                   return (
+                    <div key={index} className="relative">
+                      <div className="absolute -left-[33px] top-1 h-4 w-4 bg-white border-2 border-blue-500 rounded-full"></div>
+                      <div className="font-bold flex items-center gap-2 text-gray-700">
+                        <FaUserCircle />
+                        {isMyItem ? "Me" : (item.user?.name || "A User")}
+                        <div className="font-medium">({item.user?.roomNumber})</div>
+                      </div>
+
+                      <div className="pl-6 text-sm text-gray-600 mt-1">
+                          <a
+                            href={item.cartLink} // Updated to use cartLink
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 font-semibold hover:underline flex items-center gap-1"
+                          >
+                            🔗 Open Shared Cart
+                          </a>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

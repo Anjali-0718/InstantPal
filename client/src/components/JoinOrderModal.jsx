@@ -5,35 +5,30 @@ import { api } from '../utils/api';
 const socket = io(api.defaults.baseURL);
 
 const JoinOrderModal = ({ order, isOpen, onClose, onSubmit, currentUser }) => {
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [link, setLink] = useState('');
+  const [cartLink, setcartLink] = useState('');
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name.trim() || !quantity) {
-      setError('Item name and quantity are required.');
-      return;
+    if(!cartLink.trim()){
+      setError('Please provide a valid cart link');
+      return ;
     }
     setError('');
 
-    // Add item to order
-    onSubmit({ name, quantity, link });
+    
+    onSubmit({ cartLink });
 
-    // Emit message to chat (so all members see it in ChatBox)
+
     socket.emit('sendMessage', {
       orderId: order._id,
       sender: currentUser?.name || "Someone",
-      message: `${currentUser?.name || "Someone"} added ${quantity} × ${name} ${link ? `(Link: ${link})` : ""} to the order.`,
+      message: `${currentUser?.name || "Someone"} added added their shared cart to the order!`,
     });
 
-    // Reset and close
-    setName('');
-    setQuantity(1);
-    setLink('');
+    setcartLink('');
     onClose();
   };
 
@@ -47,37 +42,16 @@ const JoinOrderModal = ({ order, isOpen, onClose, onSubmit, currentUser }) => {
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Item Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-              placeholder="e.g., Lays Magic Masala"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Item Link (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700">Cart link</label>
             <input
               type="url"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
+              value={cartLink}
+              onChange={(e) => setcartLink(e.target.value)}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-              placeholder="https://... product link"
+              placeholder="Paste the cart link here"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Quantity</label>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-              min="1"
-              required
-            />
-          </div>
+        
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <div className="flex justify-end gap-4 pt-4">
             <button
@@ -91,7 +65,7 @@ const JoinOrderModal = ({ order, isOpen, onClose, onSubmit, currentUser }) => {
               type="submit"
               className="bg-yellow-400 text-black font-semibold px-4 py-2 rounded-md hover:bg-yellow-500"
             >
-              Add to Order
+              Submit Cart
             </button>
           </div>
         </form>

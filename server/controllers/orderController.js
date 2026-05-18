@@ -86,14 +86,22 @@ export const getOrdersByHostel = async (req, res) => {
 export const joinOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { name, quantity, link } = req.body;
-    const userId = req.user.id;
+    const { cartLink } = req.body; 
+    const userId = req.user._id || req.user.id;
+    if (!cartLink) {
+        return res.status(400).json({ msg: 'Cart link is required' });
+    }
 
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ msg: 'Order not found' });
     if (order.status === 'Locked') return res.status(403).json({ msg: 'Order is locked' });
 
-    order.items.push({ user: userId, name, quantity, link });
+    order.items.push({ user: userId, cartLink });
+    
+    if (!order.joinedUsers.includes(userId)) {
+      order.joinedUsers.push(userId);
+    }
+
     await order.save();
 
     const populatedOrder = await Order.findById(orderId)
@@ -106,6 +114,7 @@ export const joinOrder = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+  
 export const lockOrder = async (req, res) => {
   try {
     const { orderId } = req.params;

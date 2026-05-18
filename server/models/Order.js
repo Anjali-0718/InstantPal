@@ -20,10 +20,8 @@ const messageSchema = new mongoose.Schema(
 );
 
 const itemSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  name: { type: String, required: true },
-  quantity: { type: Number, required: true },
-  link: { type: String }, 
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User',required: true },
+  cartLink: { type: String, required: true },
 });
 
 const orderSchema = new mongoose.Schema(

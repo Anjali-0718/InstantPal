@@ -81,14 +81,15 @@ const Dashboard = () => {
   };
 
   const handleJoinSubmit = async (formData) => {
+    console.log("Frontend is trying to send:", formData);
     if (!selectedOrder?._id) return;
     try {
       await api.post(`/orders/join/${selectedOrder._id}`, formData, config);
       await fetchData();
       handleCloseJoinModal();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Failed to join order.');
-    }
+      const errorText = err?.response?.data?.msg || err?.response?.data?.message || 'Failed to join order.';
+      alert(errorText);    }
   };
 
   const handleLock = async (orderId) => {
