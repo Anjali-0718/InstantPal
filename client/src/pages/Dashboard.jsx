@@ -4,8 +4,9 @@ import Header from '../components/Header';
 import AvailableOrders from '../components/AvailableOrders';
 import MyOrders from '../components/MyOrders';
 import JoinOrderModal from '../components/JoinOrderModal';
-import { startNotifications } from '../utils/notificationUtil'; // ✅ Integrated notification helper
-import { api } from '../utils/api'; // ✅ central api with BACKEND_URL
+import { startNotifications } from '../utils/notificationUtil';
+import { api } from '../utils/api'; 
+import { io } from 'socket.io-client';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -56,15 +57,29 @@ const Dashboard = () => {
     } else {
       navigate('/login');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // ✅ Trigger push registration when the user profile data is successfully loaded
-  // useEffect(() => {
-  //   if (user && user._id && user.hostel) {
-  //     startNotifications(user._id, user.hostel);
-  //   }
-  // }, [user]);
+  useEffect(() => {
+    const socketUrl = api.defaults.baseURL.replace('/api', '');
+    const socket = io(socketUrl, { 
+      credentials: true, 
+      transports: ['websocket'] 
+    });
+
+    socket.on('new_order_added', () => {
+      console.log("Global event: New order detected! Refreshing dashboard...");
+      fetchData(); 
+    });
+    socket.on('order_status_changed', () => {
+      console.log("Global event: Order was updated (Joined/Locked/Deleted)! Refreshing...");
+      fetchData(); 
+    });
+    return () => {
+      socket.off('new_order_added');
+      socket.off('order_status_changed');
+      socket.disconnect();
+    };
+  }, []);
 
   const handleStartOrder = async () => {
     try {
@@ -130,7 +145,8 @@ const Dashboard = () => {
   return (
     <div className=" p-6 space-y-8">
       <Header user={user} />
-<div className="flex justify-end mb-4">
+      
+      <div className="flex justify-end mb-4">
         <button 
           onClick={() => {
             const studentId = user?._id || user?.id;
@@ -138,15 +154,16 @@ const Dashboard = () => {
             
             startNotifications(studentId, hostelName);
           }} 
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors"
+          className="bg-blue-500 text-black px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors"
         >
           🔔 Enable Notifications
         </button>
       </div>
-      {/* ✅ Available Orders */}
+      
+      {/* Available Orders */}
       <AvailableOrders orders={availableOrders} onJoinClick={handleOpenJoinModal} />
 
-      {/* ✅ Create New Order */}
+      {/* Create New Order */}
       <div className="bg-gray-100 p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4">➕ Start a New Group Order</h2>
         <div className="grid gap-4">
@@ -178,7 +195,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ✅ My Orders */}
       <MyOrders
         orders={myOrders}
         handleLock={handleLock}
@@ -188,7 +204,6 @@ const Dashboard = () => {
         onRefreshData={fetchData}
       />
 
-      {/* ✅ Join Modal */}
       <JoinOrderModal
         isOpen={isJoinModalOpen}
         onClose={handleCloseJoinModal}

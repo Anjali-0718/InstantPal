@@ -58,7 +58,8 @@ export const createOrder = async (req, res) => {
     });
 
     await newOrder.save();
-
+    const io = req.app.get('io');
+    io.emit('new_order_added');
     // ✅ INTEGRATION HOOK: Silent, non-blocking webhook to trigger push notifications
     fetch('https://notification-backend-1q5k.onrender.com/api/notifications/trigger', {
       method: 'POST',
@@ -113,7 +114,10 @@ export const joinOrder = async (req, res) => {
     }
 
     await order.save();
-
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('order_status_changed'); 
+    }
     const populatedOrder = await Order.findById(orderId)
       .populate('items.user', 'name email roomNumber')
       .populate('initiatedBy', 'name email roomNumber');
@@ -140,6 +144,10 @@ export const lockOrder = async (req, res) => {
     order.status = 'Locked';
     order.lockedAt = new Date();
     await order.save();
+    const io = req.app.get('io');
+    if (io) {
+    io.emit('order_status_changed'); // 📢 Shout that an order changed!
+    }
     res.json(order);
   } catch (err) {
     console.error('Lock Order Error:', err);
@@ -191,13 +199,24 @@ export const deleteOrder = async (req, res) => {
       return res.status(403).json({ msg: 'Not authorized to delete this order' });
     }
 
+    // Grab the loudspeaker
+    const io = req.app.get('io');
+
     if (isInitiator) {
       await Order.findByIdAndDelete(orderId);
+      
+      // ✅ Shout BEFORE returning!
+      if (io) io.emit('order_status_changed'); 
+      
       return res.status(200).json({ msg: 'Order deleted for all users in same hostel' });
     }
 
     order.items = order.items.filter(item => item.user.toString() !== String(userId));
     await order.save();
+    
+    // ✅ Shout for participant leaving
+    if (io) io.emit('order_status_changed'); 
+    
     return res.status(200).json({ msg: 'You have left the order' });
   } catch (error) {
     console.error('Delete Order Error:', error);
