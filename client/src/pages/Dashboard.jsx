@@ -60,11 +60,11 @@ const Dashboard = () => {
   }, [token]);
 
   // ✅ Trigger push registration when the user profile data is successfully loaded
-  useEffect(() => {
-    if (user && user._id && user.hostel) {
-      startNotifications(user._id, user.hostel);
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user && user._id && user.hostel) {
+  //     startNotifications(user._id, user.hostel);
+  //   }
+  // }, [user]);
 
   const handleStartOrder = async () => {
     try {
@@ -130,7 +130,14 @@ const Dashboard = () => {
   return (
     <div className=" p-6 space-y-8">
       <Header user={user} />
-
+      <div className="flex justify-end mb-4">
+        <button 
+          onClick={() => startNotifications(user._id, user.hostel)} 
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors"
+        >
+          🔔 Enable Notifications
+        </button>
+      </div>
       {/* ✅ Available Orders */}
       <AvailableOrders orders={availableOrders} onJoinClick={handleOpenJoinModal} />
 
