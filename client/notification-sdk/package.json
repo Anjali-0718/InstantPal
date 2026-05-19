@@ -1,0 +1,11 @@
+{
+  "name": "campus-notifier-sdk",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "description": "Client-side SDK package to integrate campus notifications easily",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

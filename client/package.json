@@ -12,7 +12,9 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "axios": "^1.11.0",
+    "campus-notifier-sdk": "file:notification-sdk",
     "date-fns": "^4.1.0",
+    "firebase": "^12.13.0",
     "lucide-react": "^0.525.0",
     "postcss": "^8.5.6",
     "react": "^19.1.0",

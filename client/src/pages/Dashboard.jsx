@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import AvailableOrders from '../components/AvailableOrders';
 import MyOrders from '../components/MyOrders';
 import JoinOrderModal from '../components/JoinOrderModal';
+import { startNotifications } from '../utils/notificationUtil'; // ✅ Integrated notification helper
 import { api } from '../utils/api'; // ✅ central api with BACKEND_URL
 
 const Dashboard = () => {
@@ -22,10 +23,9 @@ const Dashboard = () => {
     () => ({ headers: { Authorization: `Bearer ${token}` } }),
     [token]
   );
-  const fetchData = async () => {
 
+  const fetchData = async () => {
     try {
-      
       const [userRes, myOrdersRes, availableOrdersRes] = await Promise.all([
         api.get('/auth/profile', config),
         api.get('/orders/myorders', config),
@@ -59,6 +59,13 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  // ✅ Trigger push registration when the user profile data is successfully loaded
+  useEffect(() => {
+    if (user && user._id && user.hostel) {
+      startNotifications(user._id, user.hostel);
+    }
+  }, [user]);
+
   const handleStartOrder = async () => {
     try {
       await api.post('/orders/create', { platform, upiId, optionalMessage }, config);
@@ -89,7 +96,8 @@ const Dashboard = () => {
       handleCloseJoinModal();
     } catch (err) {
       const errorText = err?.response?.data?.msg || err?.response?.data?.message || 'Failed to join order.';
-      alert(errorText);    }
+      alert(errorText);
+    }
   };
 
   const handleLock = async (orderId) => {

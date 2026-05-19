@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import User from '../models/User.js';
+import fetch from 'node-fetch'; // ✅ Imported for microservice communication
 
 export const addMessageToOrder = async (req, res) => {
   try {
@@ -13,7 +14,6 @@ export const addMessageToOrder = async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-   
     const userId = req.user._id || req.user.id;
     const userDoc = await User.findById(userId);
     if (!userDoc) return res.status(404).json({ message: 'User not found' });
@@ -58,6 +58,17 @@ export const createOrder = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // ✅ INTEGRATION HOOK: Silent, non-blocking webhook to trigger push notifications
+    fetch('https://notification-backend-1q5k.onrender.com/api/notifications/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        hostelName: newOrder.hostel,       // Channels subscribers by hostel name
+        initiatorId: newOrder.initiatedBy  // Prevents sending a push notification to the creator
+      })
+    }).catch(err => console.error('Notification microservice trigger failed:', err.message));
+
     res.status(201).json(newOrder);
   } catch (err) {
     console.error('Create Order Error:', err);
@@ -81,7 +92,6 @@ export const getOrdersByHostel = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
-
 
 export const joinOrder = async (req, res) => {
   try {
@@ -185,7 +195,6 @@ export const deleteOrder = async (req, res) => {
       await Order.findByIdAndDelete(orderId);
       return res.status(200).json({ msg: 'Order deleted for all users in same hostel' });
     }
-
 
     order.items = order.items.filter(item => item.user.toString() !== String(userId));
     await order.save();
