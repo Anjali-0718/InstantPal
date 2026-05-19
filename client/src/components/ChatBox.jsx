@@ -6,7 +6,7 @@ const ChatBox = ({ orderId, currentUser, onNewMessage }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
-  const socketRef = useRef(null); // ✅ store socket in ref
+  const socketRef = useRef(null);
 
   const token = localStorage.getItem('token');
   const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -15,10 +15,9 @@ const ChatBox = ({ orderId, currentUser, onNewMessage }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // ✅ Setup socket + load chat history
   useEffect(() => {
-    // create socket
-    const socket = io(api.defaults.baseURL);
+    const socketUrl = api.defaults.baseURL.replace('/api', '');
+    const socket = io(socketUrl, { credentials: true });
     socketRef.current = socket;
 
     const fetchChatHistory = async () => {
@@ -32,7 +31,6 @@ const ChatBox = ({ orderId, currentUser, onNewMessage }) => {
 
     fetchChatHistory();
 
-    // join order room
     socket.emit('join_order_room', orderId);
 
     const handleReceive = (incomingMessage) => {
@@ -42,72 +40,53 @@ const ChatBox = ({ orderId, currentUser, onNewMessage }) => {
 
     socket.on('receive_message', handleReceive);
 
-    // cleanup on unmount
     return () => {
       socket.emit('leave_order_room', orderId);
       socket.off('receive_message', handleReceive);
-      socket.disconnect(); // ✅ disconnect properly
+      socket.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   useEffect(scrollToBottom, [messages]);
 
-  // ✅ Send message
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
     const trimmed = newMessage.trim();
     if (!trimmed) return;
 
-    try {
-      // Save to DB
-      const res = await api.post(
-        `/orders/${orderId}/chat`,
-        { text: trimmed },
-        config
-      );
-
-      const savedMessage = res.data;
-
-      // Update local state
-      setMessages((prev) => [...prev, savedMessage]);
-
-      // Broadcast via socket
-      if (socketRef.current) {
-        socketRef.current.emit('send_message', {
-          orderId,
-          ...savedMessage,
-        });
-      }
-
+    if (socketRef.current) {
+      socketRef.current.emit('send_message', {
+        orderId,
+        userId: currentUser?._id || currentUser?.id,
+        text: trimmed,
+      });
+      
       setNewMessage('');
-    } catch (error) {
-      console.error('Failed to send message:', error);
     }
   };
 
   return (
-    <div className="mt-4 border-t pt-4">
+    <div className="mt-4 border-t pt-4 w-full max-w-full">
       <h4 className="font-semibold text-gray-800 mb-2">Group Chat</h4>
 
       <div className="h-64 overflow-y-auto bg-gray-50 p-3 rounded-lg border flex flex-col gap-3">
         {messages.map((msg, index) => {
           const senderId = msg?.user?._id || msg?.user;
-          const isMe = String(senderId) === String(currentUser._id);
-          const senderName = msg?.user?.name || msg?.name || 'User';
+          const isMe = String(senderId) === String(currentUser?._id || currentUser?.id);
+          const senderName = msg?.name || msg?.user?.name || 'User';
 
           return (
             <div
               key={msg._id || index}
-              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full`}
             >
               <div
-                className={`max-w-xs p-3 rounded-xl ${
-                  isMe ? 'bg-pink-100 text-black' : 'bg-blue-100 text-black-800'
+                className={`max-w-[85%] p-3 rounded-xl ${
+                  isMe ? 'bg-pink-100 text-black' : 'bg-blue-100 text-gray-800'
                 }`}
               >
-                <p className="text-xs font-bold mb-1">{senderName}</p>
-                <p>{msg.text}</p>
+                <p className="text-[10px] font-bold mb-0.5 opacity-60 uppercase tracking-wider">{senderName}</p>
+                <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>
               </div>
             </div>
           );
@@ -115,17 +94,17 @@ const ChatBox = ({ orderId, currentUser, onNewMessage }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
+      <form onSubmit={handleSendMessage} className="mt-3 flex w-full gap-2 items-center">
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type a message..."
-          className="flex-grow border rounded-lg px-3 py-2"
+          className="flex-1 min-w-0 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
         />
         <button
           type="submit"
-          className="bg-blue-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-blue-600"
+          className="bg-blue-500 text-black font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200 shrink-0"
         >
           Send
         </button>

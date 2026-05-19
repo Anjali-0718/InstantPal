@@ -20,14 +20,6 @@ const JoinOrderModal = ({ order, isOpen, onClose, onSubmit, currentUser }) => {
 
     
     onSubmit({ cartLink });
-
-
-    socket.emit('sendMessage', {
-      orderId: order._id,
-      sender: currentUser?.name || "Someone",
-      message: `${currentUser?.name || "Someone"} added added their shared cart to the order!`,
-    });
-
     setcartLink('');
     onClose();
   };
