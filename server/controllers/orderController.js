@@ -1,6 +1,6 @@
 import Order from '../models/Order.js';
 import User from '../models/User.js';
-import fetch from 'node-fetch';
+import fetch from 'node-fetch'; // ✅ Imported for microservice communication
 
 export const addMessageToOrder = async (req, res) => {
   try {
@@ -27,6 +27,7 @@ export const addMessageToOrder = async (req, res) => {
     order.chat.push(newMessage);
     await order.save();
 
+    // return the last message populated like your socket send
     const populated = await Order.findById(orderId).populate('chat.user', 'name');
     const last = populated.chat[populated.chat.length - 1];
 
@@ -58,24 +59,15 @@ export const createOrder = async (req, res) => {
 
     await newOrder.save();
 
-    console.log(`[WebHook] Attempting to alert microservice for hostel: ${newOrder.hostel}`);
-    
+    // ✅ INTEGRATION HOOK: Silent, non-blocking webhook to trigger push notifications
     fetch('https://notification-backend-1q5k.onrender.com/api/notifications/trigger', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        hostelName: newOrder.hostel,
-        initiatorId: newOrder.initiatedBy
+        hostelName: newOrder.hostel,       // Channels subscribers by hostel name
+        initiatorId: newOrder.initiatedBy  // Prevents sending a push notification to the creator
       })
-    })
-    .then(async (res) => {
-       console.log(`[WebHook] Microservice responded with Status: ${res.status}`);
-       if (!res.ok) {
-           const text = await res.text();
-           console.log(`[WebHook] Microservice error details:`, text);
-       }
-    })
-    .catch(err => console.error('[WebHook] Network trigger critically failed:', err.message));
+    }).catch(err => console.error('Notification microservice trigger failed:', err.message));
 
     res.status(201).json(newOrder);
   } catch (err) {
