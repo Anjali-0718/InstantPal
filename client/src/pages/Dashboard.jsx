@@ -130,9 +130,14 @@ const Dashboard = () => {
   return (
     <div className=" p-6 space-y-8">
       <Header user={user} />
-      <div className="flex justify-end mb-4">
+<div className="flex justify-end mb-4">
         <button 
-          onClick={() => startNotifications(user._id, user.hostel)} 
+          onClick={() => {
+            const studentId = user?._id || user?.id;
+            const hostelName = user?.hostel || "Hostel A"; 
+            
+            startNotifications(studentId, hostelName);
+          }} 
           className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors"
         >
           🔔 Enable Notifications
