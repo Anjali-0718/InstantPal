@@ -31,7 +31,6 @@ const MyOrders = ({
       </div>
     );
   }
-
   const toggleChat = (orderId) => {
     setActiveChatOrderId((prevId) => (prevId === orderId ? null : orderId));
   };
