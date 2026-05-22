@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { api } from '../utils/api';
 
@@ -7,6 +7,12 @@ const socket = io(api.defaults.baseURL);
 const JoinOrderModal = ({ order, isOpen, onClose, onSubmit, currentUser }) => {
   const [cartLink, setcartLink] = useState('');
   const [error, setError] = useState('');
+  useEffect(() => {
+    if (isOpen) {
+      fetch('https://notification-backend-1q5k.onrender.com/api/health')
+        .catch(() => {}); 
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -18,7 +24,6 @@ const JoinOrderModal = ({ order, isOpen, onClose, onSubmit, currentUser }) => {
     }
     setError('');
 
-    
     onSubmit({ cartLink });
     setcartLink('');
     onClose();
