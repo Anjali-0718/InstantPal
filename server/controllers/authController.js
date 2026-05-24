@@ -24,7 +24,7 @@ export const registerUser = async (req, res) => {
         msg: 'Mismatch: Your Registration Number must match the beginning of your email.' 
       });
     }
-    
+
     if (!/^[0-9]{4}[a-z]{4}[0-9]{3}@nitjsr\.ac\.in$/.test(email)) {
       return res.status(400).json({ msg: 'Invalid college email format.' }); // changed 'error' to 'msg' for consistency
     }
@@ -135,6 +135,7 @@ export const verifyOtp = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
