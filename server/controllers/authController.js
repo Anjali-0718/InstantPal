@@ -6,22 +6,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// ✅ The Bulletproof Render + Gmail Config
+// The Professional Brevo Config
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587, // Changed to 587
-  secure: false, // MUST be false when using port 587
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  // ✅ Fail-safes: If Google doesn't answer in 10 seconds, throw an error instead of hanging forever
-  connectionTimeout: 10000, 
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  }
 });
 
 export const registerUser = async (req, res) => {
