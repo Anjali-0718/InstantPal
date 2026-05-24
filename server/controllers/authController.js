@@ -92,7 +92,7 @@ const existingUser = await User.findOne({
 
     try {
       await transporter.sendMail({
-        from: `"Instapal" <${process.env.EMAIL_USER}>`,
+        from: `"Instapal" <2023ugec0182nitjs.ac.in>`,
         to: email,
         subject: 'Verify your Instapal Account',
         html: `<h2>Welcome to Instapal!</h2>
