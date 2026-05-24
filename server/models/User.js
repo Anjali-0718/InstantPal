@@ -27,9 +27,18 @@ const userSchema = new mongoose.Schema({
   },
   roomNumber: {
     type: String,
-    required: true,
-    match: [/^\d{4}$/, 'Room number must be exactly 4 digits']
-    }  
+    required: true
+    } ,
+    isVerified: {
+    type: Boolean,
+    default: false
+  },
+  otp: {
+    type: String,
+  },
+  otpExpires: {
+    type: Date,
+  } 
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
