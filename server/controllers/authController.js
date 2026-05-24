@@ -6,18 +6,22 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// ✅ The Bulletproof Render + Gmail Config
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // true for port 465, false for other ports
+  port: 587, // Changed to 587
+  secure: false, // MUST be false when using port 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
-  // This forces Nodemailer to use IPv4. Render often times out trying to use IPv6 for SMTP.
   tls: {
     rejectUnauthorized: false
-  }
+  },
+  // ✅ Fail-safes: If Google doesn't answer in 10 seconds, throw an error instead of hanging forever
+  connectionTimeout: 10000, 
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 
 export const registerUser = async (req, res) => {
