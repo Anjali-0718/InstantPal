@@ -27,6 +27,7 @@ export const startNotifications = async (studentId, hostelName) => {
         if (!hostelName) {
             return;
         }
+
         await notifier.registerServiceWorker('/firebase-messaging-sw.js');
         await notifier.enableNotifications(studentId, hostelName, messaging, getToken);
     } catch (error) {
