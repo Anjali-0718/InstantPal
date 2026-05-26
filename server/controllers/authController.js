@@ -6,7 +6,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// The Professional Brevo Config
 const transporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
   port:2525,
