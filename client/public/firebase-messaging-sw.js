@@ -13,11 +13,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    const notificationIcon = payload.data.icon || '/favicon.ico';
+    const customLogo = "https://instantpal-client.onrender.com/instaPalLogo.png";
+
     self.registration.showNotification(payload.data.title, {
         body: payload.data.body,
-        icon: notificationIcon,
-        badge: notificationIcon, 
+        icon: customLogo,
+        badge: customLogo, 
         data: { url: payload.data.link } 
     });
 });
