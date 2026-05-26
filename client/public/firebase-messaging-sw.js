@@ -1,7 +1,6 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Paste the config you got from the Firebase Console here
 firebase.initializeApp({
   apiKey: "AIzaSyDBLjF9onGD36mFx_js8oZLk4SYR_vuAgM",
   authDomain: "instapal-notifier.firebaseapp.com",
@@ -14,8 +13,14 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    self.registration.showNotification(payload.notification.title, {
-        body: payload.notification.body,
-        icon: '/favicon.ico'
+    self.registration.showNotification(payload.data.title, {
+        body: payload.data.body,
+        icon: '/favicon.ico',
+        data: { url: payload.data.link } 
     });
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(clients.openWindow(event.notification.data.url));
 });
