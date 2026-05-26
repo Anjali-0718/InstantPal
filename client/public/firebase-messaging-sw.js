@@ -13,9 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+    const notificationIcon = payload.data.icon || '/favicon.ico';
     self.registration.showNotification(payload.data.title, {
         body: payload.data.body,
-        icon: '/favicon.ico',
+        icon: notificationIcon,
+        badge: notificationIcon, 
         data: { url: payload.data.link } 
     });
 });
