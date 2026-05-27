@@ -28,7 +28,7 @@ export const registerUser = async (req, res) => {
     }
 
     if (!/^[0-9]{4}[a-z]{4}[0-9]{3}@nitjsr\.ac\.in$/.test(email)) {
-      return res.status(400).json({ msg: 'Invalid college email format.' }); // changed 'error' to 'msg' for consistency
+      return res.status(400).json({ msg: 'Invalid college email format.' }); 
     }
 
 const existingUser = await User.findOne({
