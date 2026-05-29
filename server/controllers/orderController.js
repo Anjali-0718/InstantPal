@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import fetch from 'node-fetch';
+import redisClient from '../utils/redis.js';
 
 export const addMessageToOrder = async (req, res) => {
   try {
@@ -57,6 +58,9 @@ export const createOrder = async (req, res) => {
 
     await newOrder.save();
     
+   
+    await redisClient.del(`orders:hostel:${newOrder.hostel}`);
+    
     const io = req.app.get('io');
     if (io) {
       io.emit('new_order_added');
@@ -82,10 +86,24 @@ export const getOrdersByHostel = async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
+    const cacheKey = `orders:hostel:${user.hostel}`;
+
+  
+    const cachedOrders = await redisClient.get(cacheKey);
+    if (cachedOrders) {
+      console.log(`[Redis] Cache Hit for hostel: ${user.hostel}`);
+      return res.json(JSON.parse(cachedOrders));
+    }
+
+    console.log(`[Redis] Cache Miss. Fetching from MongoDB...`);
+   
     const orders = await Order.find({ hostel: user.hostel, status: 'Open' })
       .populate('initiatedBy', 'name email roomNumber')
       .populate('items.user', 'name email roomNumber')
       .sort({ createdAt: -1 });
+
+    
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(orders));
 
     res.json(orders);
   } catch (err) {
@@ -116,6 +134,9 @@ export const joinOrder = async (req, res) => {
     }
 
     await order.save();
+
+   
+    await redisClient.del(`orders:hostel:${order.hostel}`);
 
     if (String(order.initiatedBy) !== String(userId)) { 
       fetch('https://notification-backend-1q5k.onrender.com/api/notifications/notify-user', {
@@ -159,6 +180,9 @@ export const lockOrder = async (req, res) => {
     order.status = 'Locked';
     order.lockedAt = new Date();
     await order.save();
+    
+  
+    await redisClient.del(`orders:hostel:${order.hostel}`);
     
     const io = req.app.get('io');
     if (io) {
@@ -213,15 +237,23 @@ export const deleteOrder = async (req, res) => {
     }
 
     const io = req.app.get('io');
+    const hostelName = order.hostel; 
 
     if (isInitiator) {
       await Order.findByIdAndDelete(orderId);
+      
+    
+      await redisClient.del(`orders:hostel:${hostelName}`);
+      
       if (io) io.emit('order_status_changed'); 
       return res.status(200).json({ msg: 'Order deleted for all users in same hostel' });
     }
 
     order.items = order.items.filter(item => item.user.toString() !== String(userId));
     await order.save();
+    
+
+    await redisClient.del(`orders:hostel:${hostelName}`);
     
     if (io) io.emit('order_status_changed'); 
     
