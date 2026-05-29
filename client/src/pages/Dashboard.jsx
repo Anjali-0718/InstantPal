@@ -5,7 +5,7 @@ import AvailableOrders from '../components/AvailableOrders';
 import MyOrders from '../components/MyOrders';
 import JoinOrderModal from '../components/JoinOrderModal';
 import { startNotifications } from '../utils/notificationUtil';
-import { api } from '../utils/api'; 
+import { api } from '../utils/api';
 import { io } from 'socket.io-client';
 
 const Dashboard = () => {
@@ -43,7 +43,6 @@ const Dashboard = () => {
 
       setAvailableOrders(filteredAvailable);
     } catch (err) {
-      console.error('Dashboard fetch error:', err?.response?.data || err.message);
       if (err?.response?.status === 401) {
         localStorage.removeItem('token');
         navigate('/login');
@@ -67,11 +66,9 @@ const Dashboard = () => {
     });
 
     socket.on('new_order_added', () => {
-      console.log("Global event: New order detected! Refreshing dashboard...");
       fetchData(); 
     });
     socket.on('order_status_changed', () => {
-      console.log("Global event: Order was updated (Joined/Locked/Deleted)! Refreshing...");
       fetchData(); 
     });
     return () => {
@@ -82,11 +79,12 @@ const Dashboard = () => {
   }, []);
 
   const handleStartOrder = async () => {
+    const payload = { platform, upiId, optionalMessage };
+    setUpiId('');
+    setOptionalMessage('');
     try {
-      await api.post('/orders/create', { platform, upiId, optionalMessage }, config);
-      await fetchData();
-      setUpiId('');
-      setOptionalMessage('');
+      await api.post('/orders/create', payload, config);
+      fetchData();
     } catch (err) {
       alert(err?.response?.data?.message || 'Error creating order');
     }
@@ -103,11 +101,10 @@ const Dashboard = () => {
   };
 
   const handleJoinSubmit = async (formData) => {
-    console.log("Frontend is trying to send:", formData);
     if (!selectedOrder?._id) return;
     try {
       await api.post(`/orders/join/${selectedOrder._id}`, formData, config);
-      await fetchData();
+      fetchData();
       handleCloseJoinModal();
     } catch (err) {
       const errorText = err?.response?.data?.msg || err?.response?.data?.message || 'Failed to join order.';
@@ -116,20 +113,25 @@ const Dashboard = () => {
   };
 
   const handleLock = async (orderId) => {
+    setMyOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'Locked' } : o));
     try {
       await api.post(`/orders/lock/${orderId}`, {}, config);
-      await fetchData();
     } catch (err) {
+      fetchData();
       alert(err?.response?.data?.message || 'Failed to lock order.');
     }
   };
 
   const handleDelete = async (orderId) => {
     if (!window.confirm("Are you sure? This will permanently delete the order for everyone.")) return;
+    
+    setMyOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+    setAvailableOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+    
     try {
       await api.delete(`/orders/${orderId}`, config);
-      await fetchData();
     } catch (err) {
+      fetchData();
       alert(err?.response?.data?.message || "Failed to delete order.");
     }
   };
@@ -160,10 +162,8 @@ const Dashboard = () => {
         </button>
       </div>
       
-      {/* Available Orders */}
       <AvailableOrders orders={availableOrders} onJoinClick={handleOpenJoinModal} />
 
-      {/* Create New Order */}
       <div className="bg-gray-100 p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4">➕ Start a New Group Order</h2>
         <div className="grid gap-4">
