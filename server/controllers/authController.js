@@ -124,8 +124,6 @@ export const verifyOtp = async (req, res) => {
     if (user.otpExpires < new Date()) {
       return res.status(400).json({ msg: 'OTP has expired. Please register again.' });
     }
-
-    // Success! Verify user and clear the OTP fields
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
@@ -148,7 +146,6 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email }).select('+password');
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
-    // Security Check: Block login if email isn't verified
     if (!user.isVerified) {
       return res.status(403).json({ msg: 'Please verify your email before logging in.' });
     }
